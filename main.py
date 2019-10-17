@@ -1,53 +1,68 @@
 import scipy.io as sio
 import numpy as np
 import matplotlib.pyplot as plt
+import MAP as map
 
 def load_data(file):
     return sio.loadmat(file)
 
-def autocorr(x):
-    result = np.correlate(x, x, mode='full')
-    return result[result.size // 2:]
+
+def single_autocorrelation(scan):
+    result = np.correlate(scan, scan, mode='full')
+    autocorr = result[result.size // 2:]
+    return autocorr / float(autocorr.max())
 
 
-if __name__ == "__main__" :
+def my_single_autocorrelation(scan):
+    l = len(scan)
+    a = np.zeros(l)
+    for k in range(0, l):
+        offset = l - k
+        a[k] = scan[0: offset - 1].dot(scan[k: l - 1])
+        a[k] = a[k] / float(l)
+    return a / float(a.max())
 
-    data = load_data("trainecg.mat")
+
+def calculate_autocorr(scans):
+    a = np.zeros(shape=(scans.shape[0], scans.shape[1]))
+    for i in range(0, scans.shape[0]):
+        a[i] = my_single_autocorrelation(scans[i, :])
+    return a
+
+
+if __name__ == "__main__":
+
+    data = load_data("data/trainecg.mat")
 
     diseased = data["diseased"]
     healthy = data["healthy"]
 
-    diseased_mean = np.mean(diseased, axis=0)
-    healthy_mean = np.mean(healthy, axis=0)
+    num_dis = diseased.shape[0]
+    num_health = healthy.shape[0]
+    num_points = diseased.shape[1]
 
-    diseased_var = np.var(diseased, axis=0)
-    healthy_var = np.var(healthy, axis=0)
+    auto_dis = calculate_autocorr(diseased)
+    auto_hea = calculate_autocorr(healthy)
 
-    auto_dis = autocorr(diseased[1, :])
-    auto_hea = autocorr(healthy[1, :])
+    x_axis = range(0, 4000)
 
-    print(auto_dis.shape)
+    # fig, axes = plt.subplots(2, 1, figsize=(24, 8))
+    #
+    # for i in range(num_dis):
+    #     axes[0].plot(x_axis, auto_dis[i], '-' + 'r')
+    #
+    # for i in range(num_health):
+    #     axes[1].plot(x_axis, auto_hea[i], '-' + 'b')
 
-    fig, axes = plt.subplots(2, 2, figsize=(24, 8))
+    k = 2950
+    data_for_k = np.concatenate((auto_hea[:, k], auto_dis[:, k]))
+    fig1, ax1 = plt.subplots()
 
-    axes[0][0].plot(np.array(range(1,4001)), diseased[1, :], '-o' + 'k', label="Data")
-    axes[0][0].set_title("Diseased example")
-    axes[0][0].legend()
-
-    axes[0][1].plot(auto_dis / float(auto_dis.max()),
-                 '-' + 'k', label="Corr")
-    axes[0][1].legend()
-    axes[0][1].set_title("Autocorrelation diseased")
-
-    axes[1][0].plot(np.array(range(1,4001)), healthy[1, :], '-o' + 'k', label="Data")
-    axes[1][0].set_title("Healthy example")
-    axes[1][0].legend()
-
-    axes[1][1].plot(auto_hea / float(auto_hea.max()),
-                 '-' + 'k', label="Corr")
-    axes[1][1].legend()
-    axes[1][1].set_title("Autocorrelation diseased")
+    ax1.plot(auto_dis[:, k], '*' + 'r')
+    ax1.plot(auto_hea[:, k], '*' + 'b')
 
     plt.show()
+
+    P_H, P_D = map.calculate_apriori(num_health, num_dis)
 
 
