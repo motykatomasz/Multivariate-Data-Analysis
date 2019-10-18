@@ -2,6 +2,7 @@ import scipy.io as sio
 import numpy as np
 import matplotlib.pyplot as plt
 import MAP as map
+import scipy.stats
 
 def load_data(file):
     return sio.loadmat(file)
@@ -46,23 +47,34 @@ if __name__ == "__main__":
 
     x_axis = range(0, 4000)
 
-    # fig, axes = plt.subplots(2, 1, figsize=(24, 8))
-    #
-    # for i in range(num_dis):
-    #     axes[0].plot(x_axis, auto_dis[i], '-' + 'r')
-    #
-    # for i in range(num_health):
-    #     axes[1].plot(x_axis, auto_hea[i], '-' + 'b')
+    fig, axes = plt.subplots(2, 1, figsize=(24, 8))
 
-    k = 2950
-    data_for_k = np.concatenate((auto_hea[:, k], auto_dis[:, k]))
-    fig1, ax1 = plt.subplots()
+    for i in range(num_health):
+        axes[0].plot(x_axis, auto_hea[i], '-' + 'b')
 
-    ax1.plot(auto_dis[:, k], '*' + 'r')
-    ax1.plot(auto_hea[:, k], '*' + 'b')
+    for i in range(num_dis):
+        axes[1].plot(x_axis, auto_dis[i], '-' + 'r')
+
+    k_star = 2950
+    # data_for_k = np.concatenate((auto_hea[:, k], auto_dis[:, k]))
+    # fig1, ax1 = plt.subplots()
+    #
+    # ax1.plot(auto_dis[:, k], '*' + 'r')
+    # ax1.plot(auto_hea[:, k], '*' + 'b')
 
     plt.show()
 
+    dis_mean = np.mean(auto_dis[:,k_star])
+    hea_mean = np.mean(auto_hea[:,k_star])
+
+    dis_std = np.std(auto_dis[:,k_star])
+    hea_std = np.std(auto_hea[:,k_star])
+
     P_H, P_D = map.calculate_apriori(num_health, num_dis)
+
+    ProbR_diseased = scipy.stats.norm(dis_mean, dis_std)
+    ProbR_healthy = scipy.stats.norm(hea_mean, hea_std)
+
+
 
 
