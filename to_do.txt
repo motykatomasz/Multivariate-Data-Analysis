@@ -1,4 +1,0 @@
-1. Calculate E[X] for healthy and diseased (use sample mean)
-2. Calculate Var[X] for healthy and diseased (this is also R(0))
-3. Caclulate R(k) for each scan.
-4. Normalize R(k)
